@@ -11,7 +11,9 @@ const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = parseInt(process.env.PORT || '3000', 10);
+  const portArgIndex = process.argv.indexOf('--port');
+  const cliPort = portArgIndex !== -1 ? process.argv[portArgIndex + 1] : undefined;
+  const PORT = parseInt(cliPort || process.env.PORT || '3000', 10);
 
   app.use(express.json());
 

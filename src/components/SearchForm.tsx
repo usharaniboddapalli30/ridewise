@@ -8,9 +8,16 @@ import {
   Sparkles,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Globe2
 } from 'lucide-react';
-import { LocationCoordinate, PopularRoute } from '../types/index.js';
+import { LocationCoordinate } from '../types/index.js';
+import {
+  INDIA_MAJOR_CITIES,
+  searchIndiaLocation,
+  reverseGeocodeIndiaLocation,
+  IndiaLocationSuggestion
+} from '../services/indiaGeocoding.js';
 
 interface SearchFormProps {
   origin: LocationCoordinate | null;
@@ -21,57 +28,6 @@ interface SearchFormProps {
   isLoading: boolean;
   selectedCity: string;
 }
-
-// Preset popular landmarks for instant suggestions in top Indian metros
-const CITY_LANDMARKS: Record<string, Array<{ name: string; address: string; lat: number; lng: number }>> = {
-  'Bengaluru': [
-    { name: 'Indiranagar 100ft Road', address: '100 Feet Rd, HAL 2nd Stage, Indiranagar, Bengaluru', lat: 12.9719, lng: 77.6412 },
-    { name: 'Koramangala 5th Block', address: 'Sony World Junction, Koramangala 5th Block, Bengaluru', lat: 12.9352, lng: 77.6245 },
-    { name: 'Kempegowda Intl Airport (BLR)', address: 'BLR Airport Terminal 1, Devanahalli, Bengaluru', lat: 13.1986, lng: 77.7066 },
-    { name: 'Whitefield ITPL', address: 'International Tech Park (ITPL), Whitefield, Bengaluru', lat: 12.9866, lng: 77.7381 },
-    { name: 'HSR Layout Sector 2', address: '27th Main Rd, HSR Layout Sector 2, Bengaluru', lat: 12.9116, lng: 77.6534 },
-    { name: 'MG Road Metro Station', address: 'MG Road, Shivaji Nagar, Bengaluru', lat: 12.9756, lng: 77.6066 }
-  ],
-  'Delhi NCR': [
-    { name: 'Connaught Place Inner Circle', address: 'Connaught Place, New Delhi', lat: 28.6315, lng: 77.2167 },
-    { name: 'DLF Cyber Hub Gurgaon', address: 'Cyber City, Phase 2, Gurugram, Haryana', lat: 28.4950, lng: 77.0895 },
-    { name: 'Indira Gandhi Intl Airport (IGI T3)', address: 'Terminal 3, IGI Airport, New Delhi', lat: 28.5562, lng: 77.1000 },
-    { name: 'Hauz Khas Village', address: 'Deer Park, Hauz Khas, New Delhi', lat: 28.5535, lng: 77.1945 },
-    { name: 'Sector 18 Noida (Atta Market)', address: 'Sector 18, Noida, Uttar Pradesh', lat: 28.5708, lng: 77.3271 }
-  ],
-  'Mumbai': [
-    { name: 'Bandra West (Linking Road)', address: 'Linking Road, Bandra West, Mumbai', lat: 19.0600, lng: 72.8360 },
-    { name: 'Bandra Kurla Complex (BKC)', address: 'G Block, BKC, Bandra East, Mumbai', lat: 19.0673, lng: 72.8687 },
-    { name: 'Chhatrapati Shivaji Maharaj Airport (T2)', address: 'Sahar, Andheri East, Mumbai', lat: 19.0896, lng: 72.8656 },
-    { name: 'Churchgate Railway Station', address: 'Churchgate, Fort, Mumbai', lat: 18.9322, lng: 72.8264 },
-    { name: 'Powai (Hiranandani Gardens)', address: 'Hiranandani Gardens, Powai, Mumbai', lat: 19.1197, lng: 72.9051 }
-  ],
-  'Hyderabad': [
-    { name: 'Hitec City (Cyber Towers)', address: 'HITEC City, Madhapur, Hyderabad', lat: 17.4504, lng: 78.3808 },
-    { name: 'Gachibowli Stadium', address: 'Old Mumbai Highway, Gachibowli, Hyderabad', lat: 17.4443, lng: 78.3498 },
-    { name: 'Rajiv Gandhi Intl Airport (RGIA)', address: 'Shamshabad, Hyderabad', lat: 17.2403, lng: 78.4294 },
-    { name: 'Jubilee Hills Check Post', address: 'Road No. 36, Jubilee Hills, Hyderabad', lat: 17.4326, lng: 78.4071 },
-    { name: 'Charminar Old City', address: 'Char Kaman, Ghansi Bazaar, Hyderabad', lat: 17.3616, lng: 78.4747 }
-  ],
-  'Pune': [
-    { name: 'Koregaon Park (North Main Rd)', address: 'Koregaon Park, Pune', lat: 18.5362, lng: 73.8940 },
-    { name: 'Hinjawadi Phase 1 IT Park', address: 'Rajiv Gandhi Infotech Park, Hinjawadi, Pune', lat: 18.5913, lng: 73.7389 },
-    { name: 'Viman Nagar (Phoenix Marketcity)', address: 'Viman Nagar, Pune', lat: 18.5621, lng: 73.9167 },
-    { name: 'Pune Railway Station', address: 'Agarkar Nagar, Pune', lat: 18.5284, lng: 73.8744 }
-  ],
-  'Chennai': [
-    { name: 'T. Nagar (Panagal Park)', address: 'Prakasam Rd, T. Nagar, Chennai', lat: 13.0418, lng: 80.2341 },
-    { name: 'OMR Sholinganallur Junction', address: 'Old Mahabalipuram Rd, Sholinganallur, Chennai', lat: 12.9010, lng: 80.2279 },
-    { name: 'Chennai International Airport (MAA)', address: 'GST Road, Meenambakkam, Chennai', lat: 12.9941, lng: 80.1709 },
-    { name: 'Marina Beach Light House', address: 'Kamarajar Salai, Mylapore, Chennai', lat: 13.0390, lng: 80.2785 }
-  ],
-  'Kolkata': [
-    { name: 'Park Street (Flurys)', address: 'Park Street, Kolkata', lat: 22.5535, lng: 88.3524 },
-    { name: 'Salt Lake Sector V', address: 'Bidhannagar, Salt Lake Sector V, Kolkata', lat: 22.5804, lng: 88.4378 },
-    { name: 'Netaji Subhash Chandra Bose Airport (CCU)', address: 'Dum Dum, Kolkata', lat: 22.6547, lng: 88.4467 },
-    { name: 'Howrah Railway Station', address: 'Howrah, West Bengal', lat: 22.5839, lng: 88.3426 }
-  ]
-};
 
 export const SearchForm: React.FC<SearchFormProps> = ({
   origin,
@@ -88,9 +44,14 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   const [locError, setLocError] = useState<string | null>(null);
 
   const [activeInput, setActiveInput] = useState<'pickup' | 'dest' | null>(null);
-  const [suggestions, setSuggestions] = useState<Array<{ name: string; address: string; lat: number; lng: number }>>([]);
+  const [suggestions, setSuggestions] = useState<IndiaLocationSuggestion[]>([]);
+  const [isSearchingSuggestions, setIsSearchingSuggestions] = useState(false);
 
-  const currentCityLandmarks = CITY_LANDMARKS[selectedCity] || CITY_LANDMARKS['Bengaluru'];
+  const isAllIndia = selectedCity.startsWith('All India');
+  const cityConfig = !isAllIndia && INDIA_MAJOR_CITIES[selectedCity] ? INDIA_MAJOR_CITIES[selectedCity] : null;
+  const currentCityLandmarks = cityConfig
+    ? cityConfig.landmarks
+    : INDIA_MAJOR_CITIES['Bengaluru'].landmarks;
 
   // Update text fields if parent coordinates change externally
   useEffect(() => {
@@ -105,65 +66,68 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     }
   }, [destination]);
 
-  // Dynamic filter for suggestions as user types
+  // Debounce search across entire India
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleTextChange = (type: 'pickup' | 'dest', text: string) => {
     if (type === 'pickup') {
       setPickupText(text);
-      if (!text.trim()) {
-        onOriginChange(null);
-      }
+      if (!text.trim()) onOriginChange(null);
     } else {
       setDestText(text);
-      if (!text.trim()) {
-        onDestinationChange(null);
-      }
+      if (!text.trim()) onDestinationChange(null);
+    }
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
 
     if (!text.trim()) {
-      setSuggestions(currentCityLandmarks.slice(0, 4));
+      setSuggestions(
+        currentCityLandmarks.slice(0, 5).map(lm => ({
+          name: lm.name,
+          address: lm.address,
+          city: selectedCity,
+          lat: lm.lat,
+          lng: lm.lng
+        }))
+      );
+      setIsSearchingSuggestions(false);
       return;
     }
 
-    const filtered = currentCityLandmarks.filter(
-      item =>
-        item.name.toLowerCase().includes(text.toLowerCase()) ||
-        item.address.toLowerCase().includes(text.toLowerCase())
-    );
-
-    if (filtered.length > 0) {
-      setSuggestions(filtered);
-    } else {
-      // Create a virtual match for the entered text centered around the city
-      const center = currentCityLandmarks[0];
-      setSuggestions([
-        {
-          name: text,
-          address: `${text}, ${selectedCity}`,
-          lat: center.lat + (Math.random() - 0.5) * 0.05,
-          lng: center.lng + (Math.random() - 0.5) * 0.05
-        }
-      ]);
-    }
+    setIsSearchingSuggestions(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await searchIndiaLocation(
+          text,
+          isAllIndia ? undefined : selectedCity
+        );
+        setSuggestions(results);
+      } catch (err) {
+        console.warn('Geocoding error:', err);
+      } finally {
+        setIsSearchingSuggestions(false);
+      }
+    }, 220);
   };
 
   const handleSelectSuggestion = (
     type: 'pickup' | 'dest',
-    item: { name: string; address: string; lat: number; lng: number }
+    item: IndiaLocationSuggestion
   ) => {
+    const loc: LocationCoordinate = {
+      lat: item.lat,
+      lng: item.lng,
+      address: item.name ? `${item.name}, ${item.city || item.address}` : item.address
+    };
+
     if (type === 'pickup') {
-      setPickupText(item.name);
-      onOriginChange({
-        lat: item.lat,
-        lng: item.lng,
-        address: item.name
-      });
+      setPickupText(loc.address || item.name);
+      onOriginChange(loc);
     } else {
-      setDestText(item.name);
-      onDestinationChange({
-        lat: item.lat,
-        lng: item.lng,
-        address: item.name
-      });
+      setDestText(loc.address || item.name);
+      onDestinationChange(loc);
     }
     setActiveInput(null);
   };
@@ -189,15 +153,15 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     setLocError(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setIsLocating(false);
+      async (position) => {
         const { latitude, longitude } = position.coords;
-        const address = `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
-        setPickupText(address);
+        const readableAddress = await reverseGeocodeIndiaLocation(latitude, longitude);
+        setIsLocating(false);
+        setPickupText(readableAddress);
         onOriginChange({
           lat: latitude,
           lng: longitude,
-          address: 'Current Location'
+          address: readableAddress
         });
       },
       (error) => {
@@ -214,9 +178,9 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     const to = currentCityLandmarks[toIndex];
     if (from && to) {
       setPickupText(from.name);
-      onOriginChange({ lat: from.lat, lng: from.lng, address: from.name });
+      onOriginChange({ lat: from.lat, lng: from.lng, address: from.address });
       setDestText(to.name);
-      onDestinationChange({ lat: to.lat, lng: to.lng, address: to.name });
+      onDestinationChange({ lat: to.lat, lng: to.lng, address: to.address });
     }
   };
 
@@ -228,9 +192,10 @@ export const SearchForm: React.FC<SearchFormProps> = ({
         <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
           <span>Compare Live Estimates</span>
         </h2>
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-          {selectedCity}
-        </span>
+        <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
+          <Globe2 className="w-3.5 h-3.5 text-blue-600" />
+          <span>{isAllIndia ? 'All India Coverage' : selectedCity}</span>
+        </div>
       </div>
 
       {locError && (
@@ -247,25 +212,16 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center justify-between">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-              Pickup Location
+              Pickup Location (Any location in India)
             </span>
             <button
               type="button"
               onClick={handleDetectLocation}
               disabled={isLocating}
-              className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1 text-[11px] hover:underline"
+              className="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer transition disabled:opacity-50"
             >
-              {isLocating ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
-                  <span>Detecting...</span>
-                </>
-              ) : (
-                <>
-                  <Navigation className="w-3 h-3" />
-                  <span>Use Current Location</span>
-                </>
-              )}
+              <Navigation className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
+              <span>{isLocating ? 'Locating...' : 'Use My GPS'}</span>
             </button>
           </label>
 
@@ -273,10 +229,20 @@ export const SearchForm: React.FC<SearchFormProps> = ({
             <input
               type="text"
               value={pickupText}
-              placeholder={`Enter pickup spot in ${selectedCity}...`}
+              placeholder="Search pickup locality, landmark, airport, or street anywhere in India..."
               onFocus={() => {
                 setActiveInput('pickup');
-                setSuggestions(currentCityLandmarks.slice(0, 4));
+                if (suggestions.length === 0) {
+                  setSuggestions(
+                    currentCityLandmarks.slice(0, 5).map(lm => ({
+                      name: lm.name,
+                      address: lm.address,
+                      city: selectedCity,
+                      lat: lm.lat,
+                      lng: lm.lng
+                    }))
+                  );
+                }
               }}
               onChange={(e) => handleTextChange('pickup', e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition shadow-2xs font-medium"
@@ -290,21 +256,29 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
           {/* Pickup Suggestion Dropdown */}
           {activeInput === 'pickup' && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 z-30 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden max-h-56 overflow-y-auto">
-              <div className="p-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
-                Popular Pickup Points in {selectedCity}
+            <div className="absolute left-0 right-0 top-full mt-1.5 z-30 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden max-h-64 overflow-y-auto">
+              <div className="p-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <span>{isAllIndia ? 'Search Across India' : `Popular in ${selectedCity} & India`}</span>
+                {isSearchingSuggestions && <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />}
               </div>
               {suggestions.map((item, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onMouseDown={() => handleSelectSuggestion('pickup', item)}
-                  className="w-full text-left px-3.5 py-2.5 hover:bg-blue-50/70 border-b border-slate-100 last:border-0 transition-colors flex items-start gap-2.5"
+                  className="w-full text-left px-3.5 py-2.5 hover:bg-blue-50/70 border-b border-slate-100 last:border-0 transition-colors flex items-start gap-2.5 cursor-pointer"
                 >
                   <MapPin className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-xs font-semibold text-slate-800">{item.name}</div>
-                    <div className="text-[11px] text-slate-500 truncate max-w-xs">{item.address}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-semibold text-slate-800">{item.name}</span>
+                      {item.state && (
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-medium">
+                          {item.state}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-500 truncate">{item.address}</div>
                   </div>
                 </button>
               ))}
@@ -318,7 +292,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
             type="button"
             onClick={handleSwap}
             title="Swap pickup and destination"
-            className="p-1.5 rounded-full bg-white border border-slate-200 shadow-md text-slate-500 hover:text-blue-600 hover:border-blue-300 transition-all active:scale-95"
+            className="p-1.5 rounded-full bg-white border border-slate-200 shadow-md text-slate-500 hover:text-blue-600 hover:border-blue-300 transition-all active:scale-95 cursor-pointer"
           >
             <ArrowUpDown className="w-3.5 h-3.5" />
           </button>
@@ -328,16 +302,26 @@ export const SearchForm: React.FC<SearchFormProps> = ({
         <div className="relative">
           <label className="block text-xs font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
-            Destination
+            Destination (Any location in India)
           </label>
           <div className="relative">
             <input
               type="text"
               value={destText}
-              placeholder={`Where do you want to go in ${selectedCity}?`}
+              placeholder="Search destination locality, office, station, or address in India..."
               onFocus={() => {
                 setActiveInput('dest');
-                setSuggestions(currentCityLandmarks.slice(0, 4));
+                if (suggestions.length === 0) {
+                  setSuggestions(
+                    currentCityLandmarks.slice(0, 5).map(lm => ({
+                      name: lm.name,
+                      address: lm.address,
+                      city: selectedCity,
+                      lat: lm.lat,
+                      lng: lm.lng
+                    }))
+                  );
+                }
               }}
               onChange={(e) => handleTextChange('dest', e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition shadow-2xs font-medium"
@@ -351,21 +335,29 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
           {/* Destination Suggestion Dropdown */}
           {activeInput === 'dest' && (
-            <div className="absolute left-0 right-0 top-full mt-1.5 z-30 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden max-h-56 overflow-y-auto">
-              <div className="p-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
-                Popular Destinations in {selectedCity}
+            <div className="absolute left-0 right-0 top-full mt-1.5 z-30 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden max-h-64 overflow-y-auto">
+              <div className="p-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <span>{isAllIndia ? 'Search Across India' : `Popular Destinations in ${selectedCity} & India`}</span>
+                {isSearchingSuggestions && <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />}
               </div>
               {suggestions.map((item, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onMouseDown={() => handleSelectSuggestion('dest', item)}
-                  className="w-full text-left px-3.5 py-2.5 hover:bg-blue-50/70 border-b border-slate-100 last:border-0 transition-colors flex items-start gap-2.5"
+                  className="w-full text-left px-3.5 py-2.5 hover:bg-blue-50/70 border-b border-slate-100 last:border-0 transition-colors flex items-start gap-2.5 cursor-pointer"
                 >
                   <MapPin className="w-4 h-4 text-rose-600 mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-xs font-semibold text-slate-800">{item.name}</div>
-                    <div className="text-[11px] text-slate-500 truncate max-w-xs">{item.address}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-semibold text-slate-800">{item.name}</span>
+                      {item.state && (
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-medium">
+                          {item.state}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-500 truncate">{item.address}</div>
                   </div>
                 </button>
               ))}
@@ -376,9 +368,12 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
       {/* Popular Presets Quick Chips */}
       <div className="mt-4 pt-3 border-t border-slate-100">
-        <div className="text-[11px] font-medium text-slate-500 mb-2 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-amber-500" />
-          <span>Quick 1-tap route presets:</span>
+        <div className="text-[11px] font-medium text-slate-500 mb-2 flex items-center justify-between">
+          <span className="flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-amber-500" />
+            <span>Popular {isAllIndia ? 'India' : selectedCity} routes:</span>
+          </span>
+          <span className="text-[10px] text-slate-400">All India Address Search Enabled</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {currentCityLandmarks.length >= 3 && (
@@ -386,14 +381,14 @@ export const SearchForm: React.FC<SearchFormProps> = ({
               <button
                 type="button"
                 onClick={() => handleQuickPreset(0, 1)}
-                className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-medium transition-colors border border-slate-200"
+                className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-medium transition-colors border border-slate-200 cursor-pointer"
               >
                 {currentCityLandmarks[0].name.split(' ')[0]} ⇄ {currentCityLandmarks[1].name.split(' ')[0]}
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickPreset(1, 2)}
-                className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-medium transition-colors border border-slate-200"
+                className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-medium transition-colors border border-slate-200 cursor-pointer"
               >
                 {currentCityLandmarks[1].name.split(' ')[0]} ⇄ Airport
               </button>
@@ -401,7 +396,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                 <button
                   type="button"
                   onClick={() => handleQuickPreset(0, 3)}
-                  className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-medium transition-colors border border-slate-200 hidden sm:inline-block"
+                  className="text-[11px] px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-medium transition-colors border border-slate-200 hidden sm:inline-block cursor-pointer"
                 >
                   {currentCityLandmarks[0].name.split(' ')[0]} ⇄ {currentCityLandmarks[3].name.split(' ')[0]}
                 </button>
@@ -426,21 +421,15 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           {isLoading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Comparing Rapido & Uber Fares...</span>
+              <span>Evaluating Real-Time Quotes...</span>
             </>
           ) : (
             <>
               <Search className="w-4 h-4" />
-              <span>Compare Rides Now</span>
+              <span>Compare Rides in {isAllIndia ? 'India' : selectedCity}</span>
             </>
           )}
         </button>
-
-        {!canCompare && (
-          <p className="text-[11px] text-center text-slate-400 mt-2">
-            Select both pickup and destination spots to compare live fares.
-          </p>
-        )}
       </div>
     </div>
   );

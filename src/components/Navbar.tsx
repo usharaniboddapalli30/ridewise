@@ -10,13 +10,27 @@ interface NavbarProps {
 }
 
 export const CITIES = [
+  'All India (Search Any Location)',
   'Bengaluru',
   'Delhi NCR',
   'Mumbai',
   'Hyderabad',
   'Pune',
   'Chennai',
-  'Kolkata'
+  'Kolkata',
+  'Ahmedabad',
+  'Jaipur',
+  'Kochi',
+  'Chandigarh',
+  'Lucknow',
+  'Indore',
+  'Surat',
+  'Visakhapatnam',
+  'Coimbatore',
+  'Goa',
+  'Bhopal',
+  'Patna',
+  'Bhubaneswar'
 ];
 
 export const Navbar: React.FC<NavbarProps> = ({
