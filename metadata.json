@@ -1,0 +1,10 @@
+{
+  "name": "RideWise - India Ride Fare Comparison",
+  "description": "Compare Rapido, Uber, and Ola rides across India for lowest fares, fastest pickup, and shortest journey times with interactive maps.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
