@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const DEFAULT_N8N_WEBHOOK_URL =
-  'https://usharaniboddpalli.app.n8n.cloud/webhook/1facc12f-be81-4a02-b274-fde118b03f71/chat';
+  'https://usharaniboddpalli.app.n8n.cloud/webhook/ad2848ba-569d-4430-b595-6f7090222fda/chat';
 
 export interface ChatMessage {
   id: string;
@@ -69,7 +69,12 @@ export const Chatboard: React.FC<ChatboardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState<string>(() => {
-    return localStorage.getItem('ridewise_n8n_url') || DEFAULT_N8N_WEBHOOK_URL;
+    const saved = localStorage.getItem('ridewise_n8n_url');
+    if (!saved || saved.includes('1facc12f-be81-4a02-b274-fde118b03f71')) {
+      localStorage.setItem('ridewise_n8n_url', DEFAULT_N8N_WEBHOOK_URL);
+      return DEFAULT_N8N_WEBHOOK_URL;
+    }
+    return saved;
   });
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [sessionId] = useState<string>(() => {

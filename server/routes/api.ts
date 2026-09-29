@@ -262,10 +262,10 @@ apiRouter.post('/compare', async (req, res) => {
   }
 });
 
-// n8n Chatboard Webhook Integration Proxy
+// n8n Chatbot Webhook Integration Proxy
 const N8N_CHAT_WEBHOOK_URL =
   process.env.N8N_CHAT_WEBHOOK_URL ||
-  'https://usharaniboddpalli.app.n8n.cloud/webhook/1facc12f-be81-4a02-b274-fde118b03f71/chat';
+  'https://usharaniboddpalli.app.n8n.cloud/webhook/ad2848ba-569d-4430-b595-6f7090222fda/chat';
 
 apiRouter.post('/chat', async (req, res) => {
   try {
