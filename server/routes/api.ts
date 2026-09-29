@@ -261,3 +261,72 @@ apiRouter.post('/compare', async (req, res) => {
     });
   }
 });
+
+// n8n Chatboard Webhook Integration Proxy
+const N8N_CHAT_WEBHOOK_URL =
+  process.env.N8N_CHAT_WEBHOOK_URL ||
+  'https://usharaniboddpalli.app.n8n.cloud/webhook/1facc12f-be81-4a02-b274-fde118b03f71/chat';
+
+apiRouter.post('/chat', async (req, res) => {
+  try {
+    const { message, sessionId, webhookUrl } = req.body as {
+      message: string;
+      sessionId?: string;
+      webhookUrl?: string;
+    };
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message text is required.' });
+    }
+
+    const targetUrl = webhookUrl?.trim() || N8N_CHAT_WEBHOOK_URL;
+    const session = sessionId || `user-${Date.now()}`;
+
+    // Send payload matching n8n Chat Trigger / Webhook specification
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/plain, */*'
+      },
+      signal: AbortSignal.timeout(35000),
+      body: JSON.stringify({
+        chatInput: message,
+        message: message,
+        action: 'sendMessage',
+        sessionId: session
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '');
+      return res.status(response.status).json({
+        error: `n8n webhook error: ${response.statusText}`,
+        details: errText
+      });
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      const outputText = data.output || data.text || data.message || data.response || JSON.stringify(data);
+      return res.json({
+        output: outputText,
+        sessionId: session,
+        raw: data
+      });
+    } else {
+      const text = await response.text();
+      return res.json({
+        output: text,
+        sessionId: session
+      });
+    }
+  } catch (error: any) {
+    console.error('n8n chat proxy error:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to communicate with n8n chat agent workflow.'
+    });
+  }
+});
+

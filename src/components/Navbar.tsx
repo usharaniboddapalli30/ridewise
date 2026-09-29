@@ -1,9 +1,11 @@
 import React from 'react';
-import { Sparkles, Info, ShieldCheck, Zap, MapPin } from 'lucide-react';
+import { Sparkles, Info, ShieldCheck, Zap, MapPin, MessageSquare, Bot } from 'lucide-react';
 
 interface NavbarProps {
   onOpenAbout: () => void;
   onOpenApiStatus: () => void;
+  onOpenChatboard?: () => void;
+  isChatOpen?: boolean;
   selectedCity: string;
   onSelectCity: (city: string) => void;
   isDemoMode: boolean;
@@ -36,6 +38,8 @@ export const CITIES = [
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenAbout,
   onOpenApiStatus,
+  onOpenChatboard,
+  isChatOpen,
   selectedCity,
   onSelectCity,
   isDemoMode
@@ -64,7 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* City Selector */}
+          {/* City Selector & Action Controls */}
           <div className="flex items-center gap-2">
             <div className="relative flex items-center bg-slate-100 hover:bg-slate-200/80 transition-colors rounded-lg px-2.5 py-1.5 border border-slate-200">
               <MapPin className="w-3.5 h-3.5 text-blue-600 mr-1.5" />
@@ -81,6 +85,27 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ))}
               </select>
             </div>
+
+            {/* AI Chatbot Button */}
+            {onOpenChatboard && (
+              <button
+                type="button"
+                onClick={onOpenChatboard}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all border cursor-pointer ${
+                  isChatOpen
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                    : 'bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 border-blue-200'
+                }`}
+                title="Chat with RideWise AI Chatbot (n8n Webhook)"
+              >
+                <div className="relative">
+                  <Bot className="w-3.5 h-3.5" />
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <span className="hidden sm:inline">AI Chatbot</span>
+                <span className="sm:hidden">Chatbot</span>
+              </button>
+            )}
 
             {/* API Status Badge Button */}
             <button
