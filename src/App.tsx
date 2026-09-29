@@ -48,7 +48,7 @@ export default function App() {
   const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
   const [isApiStatusOpen, setIsApiStatusOpen] = useState<boolean>(false);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'rides' | 'map' | 'chatbot'>('rides');
+  const [mobileTab, setMobileTab] = useState<'rides' | 'map'>('rides');
 
   const [mapsApiKey, setMapsApiKey] = useState<string>(
     import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
@@ -151,66 +151,35 @@ export default function App() {
       <Navbar
         onOpenAbout={() => setIsAboutOpen(true)}
         onOpenApiStatus={() => setIsApiStatusOpen(true)}
-        onOpenChatboard={() => {
-          setActiveTab('chatbot');
-          setIsChatOpen(true);
-        }}
-        isChatOpen={isChatOpen || activeTab === 'chatbot'}
         selectedCity={selectedCity}
         onSelectCity={handleCityChange}
         isDemoMode={comparison?.isDemoMode ?? true}
       />
 
-      {/* Main Navigation Tab Bar */}
-      <div className="bg-white border-b border-slate-200 sticky top-16 z-30 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab('rides')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'rides'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <Car className="w-3.5 h-3.5" />
-              <span>Ride Comparison</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('map')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'map'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <MapPin className="w-3.5 h-3.5" />
-              <span>Route & Map</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('chatbot')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
-                activeTab === 'chatbot'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs ring-2 ring-blue-400/40'
-                  : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-100 hover:to-indigo-100 border border-blue-200'
-              }`}
-            >
-              <div className="relative">
-                <Bot className="w-4 h-4 text-emerald-400" />
-                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              </div>
-              <span>n8n AI Chatbot</span>
-              <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-blue-500/20 text-blue-800 border border-blue-300">
-                Live
-              </span>
-            </button>
-          </div>
-
-          <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span>n8n Webhook: <code className="text-slate-700 font-mono text-[10px]">usharaniboddpalli.app.n8n.cloud</code></span>
-          </div>
-        </div>
+      {/* Mobile Tab Switcher */}
+      <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-center gap-2 shadow-2xs">
+        <button
+          onClick={() => setMobileTab('rides')}
+          className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+            mobileTab === 'rides'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <Car className="w-3.5 h-3.5" />
+          <span>Ride Comparison</span>
+        </button>
+        <button
+          onClick={() => setMobileTab('map')}
+          className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+            mobileTab === 'map'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <MapPin className="w-3.5 h-3.5" />
+          <span>Interactive Map</span>
+        </button>
       </div>
 
       {/* Main Content Area */}
@@ -231,16 +200,7 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('chatbot')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-950/40 transition-all cursor-pointer border border-blue-400/40"
-            >
-              <Bot className="w-3.5 h-3.5 text-emerald-300" />
-              <span>Ask AI Chatbot</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            </button>
-            <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-white/10 text-white border border-white/15 hidden sm:inline-block">
+            <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-white/10 text-white border border-white/15">
               Verified India Rates
             </span>
           </div>
@@ -261,153 +221,92 @@ export default function App() {
           </div>
         )}
 
-        {/* Main View Router */}
-        {activeTab === 'chatbot' ? (
-          <div className="space-y-4">
-            <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 rounded-2xl p-4 sm:p-6 text-white border border-blue-500/20 shadow-md">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600/30 border border-blue-400/40 text-blue-400 flex items-center justify-center shrink-0">
-                    <Bot className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                        RideWise AI Chatbot Assistant
-                      </h2>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Connected to n8n
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300">
-                      Ask anything about cab fares, bike ETAs, auto metered prices, or electric cars across Rapido, Uber, Ola, Namma Yatri, and BluSmart.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('rides')}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer border border-white/20"
-                  >
-                    ← Back to Rides
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Embedded In-Page Chatbot */}
-            <Chatboard
-              variant="embedded"
-              className="w-full h-[620px] rounded-2xl shadow-lg border border-slate-200"
+        {/* Two-Column Responsive Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Form & Ride Results */}
+          <div
+            className={`space-y-6 lg:col-span-7 ${
+              mobileTab === 'map' ? 'hidden lg:block' : 'block'
+            }`}
+          >
+            {/* Search Input Form */}
+            <SearchForm
+              origin={origin}
+              destination={destination}
+              onOriginChange={setOrigin}
+              onDestinationChange={setDestination}
+              onCompare={handleCompareRides}
+              isLoading={isLoading}
+              selectedCity={selectedCity}
             />
-          </div>
-        ) : activeTab === 'map' ? (
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <Navigation2 className="w-4 h-4 text-blue-600" />
-                Live Route & Navigation Map ({selectedCity})
-              </span>
-              <button
-                type="button"
-                onClick={() => setActiveTab('rides')}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer border border-blue-200"
-              >
-                View Fare List →
-              </button>
-            </div>
-            <div className="h-[600px] w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-              <MapView
-                apiKey={mapsApiKey}
-                origin={origin}
-                destination={destination}
-                route={comparison?.route || null}
-              />
-            </div>
-          </div>
-        ) : (
-          /* Default: Two-Column Responsive Layout (Rides + Map Preview) */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left Column: Form & Ride Results */}
-            <div className="space-y-6 lg:col-span-7">
-              {/* Search Input Form */}
-              <SearchForm
-                origin={origin}
-                destination={destination}
-                onOriginChange={setOrigin}
-                onDestinationChange={setDestination}
-                onCompare={handleCompareRides}
+
+            {/* Comparison Results */}
+            {comparison ? (
+              <RideComparisonList
+                comparison={comparison}
+                onRefresh={handleCompareRides}
                 isLoading={isLoading}
-                selectedCity={selectedCity}
               />
+            ) : !isLoading ? (
+              <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center">
+                <Car className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                <h3 className="text-base font-bold text-slate-800">
+                  Ready to Compare Rides
+                </h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
+                  Select your pickup location and destination above, then click Compare Rides to view live estimates from Rapido, Uber, and Ola.
+                </p>
+                <button
+                  onClick={handleCompareRides}
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer shadow-sm"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Compare Indiranagar to Koramangala</span>
+                </button>
+              </div>
+            ) : null}
+          </div>
 
-              {/* Comparison Results */}
-              {comparison ? (
-                <RideComparisonList
-                  comparison={comparison}
-                  onRefresh={handleCompareRides}
-                  isLoading={isLoading}
+          {/* Right Column: Sticky Interactive Map */}
+          <div
+            className={`lg:col-span-5 lg:sticky lg:top-20 space-y-4 ${
+              mobileTab === 'rides' ? 'hidden lg:block' : 'block'
+            }`}
+          >
+            <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
+              <div className="flex items-center justify-between px-2 py-1.5 mb-2">
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Navigation2 className="w-3.5 h-3.5 text-blue-600" />
+                  Live Route Map
+                </span>
+                {comparison?.route && (
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    {comparison.route.distanceKm} km • ~{comparison.route.durationMinutes} min
+                  </span>
+                )}
+              </div>
+              <div className="h-[460px] w-full rounded-xl overflow-hidden">
+                <MapView
+                  apiKey={mapsApiKey}
+                  origin={origin}
+                  destination={destination}
+                  route={comparison?.route || null}
                 />
-              ) : !isLoading ? (
-                <div className="bg-white rounded-2xl p-8 border border-slate-200 text-center">
-                  <Car className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-                  <h3 className="text-base font-bold text-slate-800">
-                    Ready to Compare Rides
-                  </h3>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-                    Select your pickup location and destination above, then click Compare Rides to view live estimates from Rapido, Uber, and Ola.
-                  </p>
-                  <button
-                    onClick={handleCompareRides}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer shadow-sm"
-                  >
-                    <Search className="w-3.5 h-3.5" />
-                    <span>Compare Indiranagar to Koramangala</span>
-                  </button>
-                </div>
-              ) : null}
+              </div>
             </div>
 
-            {/* Right Column: Sticky Interactive Map */}
-            <div className="lg:col-span-5 lg:sticky lg:top-20 space-y-4">
-              <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
-                <div className="flex items-center justify-between px-2 py-1.5 mb-2">
-                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <Navigation2 className="w-3.5 h-3.5 text-blue-600" />
-                    Live Route Map
-                  </span>
-                  {comparison?.route && (
-                    <span className="text-[11px] font-semibold text-slate-500">
-                      {comparison.route.distanceKm} km • ~{comparison.route.durationMinutes} min
-                    </span>
-                  )}
-                </div>
-                <div className="h-[460px] w-full rounded-xl overflow-hidden">
-                  <MapView
-                    apiKey={mapsApiKey}
-                    origin={origin}
-                    destination={destination}
-                    route={comparison?.route || null}
-                  />
-                </div>
+            {/* Quick Helper Tips Card */}
+            <div className="bg-slate-100 rounded-2xl p-4 border border-slate-200 text-xs text-slate-600 space-y-2">
+              <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-blue-600" />
+                <span>Commuter Smart Tips</span>
               </div>
-
-              {/* Quick Helper Tips Card */}
-              <div className="bg-slate-100 rounded-2xl p-4 border border-slate-200 text-xs text-slate-600 space-y-2">
-                <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Commuter Smart Tips</span>
-                </div>
-                <p className="text-[11px] leading-relaxed text-slate-500">
-                  During peak hours (8:30–11:00 AM & 6:00–9:30 PM), Rapido Bikes, Uber Moto, and Ola Bikes save an average of 14 minutes in metro congestion compared to 4-wheelers.
-                </p>
-              </div>
+              <p className="text-[11px] leading-relaxed text-slate-500">
+                During peak hours (8:30–11:00 AM & 6:00–9:30 PM), Rapido Bikes, Uber Moto, and Ola Bikes save an average of 14 minutes in metro congestion compared to 4-wheelers.
+              </p>
             </div>
           </div>
-        )}
+        </div>
       </main>
 
       {/* Footer */}
